@@ -523,20 +523,20 @@ def algorithmic_cleanup(text):
     if not text:
         return ""
         
-    # Initial cleanup - lowercase for processing
-    processed_text = text.lower()
+    # Initial cleanup - preserve original case for processing
+    processed_text = text
     
-    # Remove filler words and phrases
+    # Remove filler words and phrases (case-insensitive)
     filler_words = [
         r'\buh\b', r'\bum\b', r'\ber\b', r'\blike\b(?! to)', r'\byou know\b', 
         r'\bactually\b', r'\bbasically\b', r'\bliterally\b', r'\bi mean\b'
     ]
     
     for filler in filler_words:
-        processed_text = re.sub(filler, '', processed_text)
+        processed_text = re.sub(filler, '', processed_text, flags=re.IGNORECASE)
     
-    # Remove stuttering and word repetition
-    processed_text = re.sub(r'\b(\w+)\s+\1\b', r'\1', processed_text)  # "the the" → "the"
+    # Remove stuttering and word repetition (case-insensitive)
+    processed_text = re.sub(r'\b(\w+)\s+\1\b', r'\1', processed_text, flags=re.IGNORECASE)
     
     # Clean up spacing and multiple spaces
     processed_text = re.sub(r'\s+', ' ', processed_text)
@@ -544,11 +544,28 @@ def algorithmic_cleanup(text):
     
     # Capitalize first letter of sentences
     if processed_text:
-        processed_text = processed_text[0].upper() + processed_text[1:]
+        # Split into sentences
+        sentences = re.split(r'([.!?])\s+', processed_text)
+        processed_text = ''
+        
+        for i in range(0, len(sentences), 2):
+            sentence = sentences[i]
+            punctuation = sentences[i+1] if i+1 < len(sentences) else ''
+            
+            # Capitalize first letter of sentence
+            if sentence:
+                sentence = sentence[0].upper() + sentence[1:]
+            
+            processed_text += sentence + punctuation + ' '
+        
+        processed_text = processed_text.strip()
     
-    # Fix common punctuation issues
+    # Fix common punctuation issues while preserving case
     processed_text = re.sub(r'\s+([.,!?;:])', r'\1', processed_text)
     processed_text = re.sub(r'([.,!?;:])(\w)', r'\1 \2', processed_text)
+    
+    # Ensure proper capitalization of "I"
+    processed_text = re.sub(r'\bi\b', 'I', processed_text)
     
     return processed_text
 
