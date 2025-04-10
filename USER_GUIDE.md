@@ -152,21 +152,97 @@ The application automatically selects the best available model from your Ollama 
 
 ### Cloud API Options
 
-To enable API fallback options, set environment variables:
+To enable API fallback options, you'll need to obtain and configure API keys for each service you want to use. Here's how to get started with each provider:
 
+#### OpenAI API
+1. Visit [OpenAI Platform](https://platform.openai.com/api-keys)
+2. Sign up or log in to your OpenAI account
+3. Navigate to the API keys section
+4. Click "Create new secret key"
+5. Copy the generated key
+6. Set the environment variable:
+   ```bash
+   export OPENAI_API_KEY="your-api-key-here"
+   ```
+
+#### Anthropic API
+1. Visit [Anthropic Console](https://console.anthropic.com/account/keys)
+2. Create an account or log in
+3. Navigate to the API keys section
+4. Generate a new API key
+5. Copy the key
+6. Set the environment variable:
+   ```bash
+   export ANTHROPIC_API_KEY="your-api-key-here"
+   ```
+
+#### Google Flash Light
+1. Visit [Google MakerSuite](https://makersuite.google.com/app/apikey)
+2. Sign in with your Google account
+3. Create a new project or select an existing one
+4. Enable the necessary APIs
+5. Create credentials and generate an API key
+6. Set the environment variable:
+   ```bash
+   export GOOGLE_API_KEY="your-api-key-here"
+   ```
+
+#### Deepseek Lite
+1. Visit [Deepseek Platform](https://platform.deepseek.com/)
+2. Create an account or log in
+3. Navigate to the API section
+4. Generate a new API key
+5. Copy the key
+6. Set the environment variable:
+   ```bash
+   export DEEPSEEK_API_KEY="your-api-key-here"
+   ```
+
+#### Making API Keys Permanent
+To make your API keys permanent (so they persist after system restarts):
+
+##### Windows:
+1. Open System Properties
+2. Click "Environment Variables"
+3. Under "User variables", click "New"
+4. Add each API key as a new variable
+
+##### macOS/Linux:
+Add the export commands to your shell configuration file:
 ```bash
-# For OpenAI (add to .bashrc or .zshrc)
-export OPENAI_API_KEY="your-api-key-here"
+# For bash users
+echo 'export OPENAI_API_KEY="your-api-key-here"' >> ~/.bashrc
+echo 'export ANTHROPIC_API_KEY="your-api-key-here"' >> ~/.bashrc
+echo 'export GOOGLE_API_KEY="your-api-key-here"' >> ~/.bashrc
+echo 'export DEEPSEEK_API_KEY="your-api-key-here"' >> ~/.bashrc
 
-# For Anthropic (add to .bashrc or .zshrc)
-export ANTHROPIC_API_KEY="your-api-key-here"
-
-# For Google (add to .bashrc or .zshrc)
-export GOOGLE_API_KEY="your-api-key-here"
-
-# For Deepseek (add to .bashrc or .zshrc)
-export DEEPSEEK_API_KEY="your-api-key-here"
+# For zsh users
+echo 'export OPENAI_API_KEY="your-api-key-here"' >> ~/.zshrc
+echo 'export ANTHROPIC_API_KEY="your-api-key-here"' >> ~/.zshrc
+echo 'export GOOGLE_API_KEY="your-api-key-here"' >> ~/.zshrc
+echo 'export DEEPSEEK_API_KEY="your-api-key-here"' >> ~/.zshrc
 ```
+
+After adding the keys, restart your terminal or run:
+```bash
+source ~/.bashrc  # for bash
+# or
+source ~/.zshrc   # for zsh
+```
+
+#### API Key Security Tips
+- Never share your API keys or commit them to version control
+- Use different keys for development and production
+- Regularly rotate your API keys
+- Monitor your API usage to prevent unexpected charges
+- Consider using a secrets manager for production environments
+
+#### Verifying API Keys
+The application will automatically check your API keys when it starts. You'll see a status message for each configured key:
+- ✓ Green checkmark: Key is configured and valid
+- ✗ Red X: Key is missing or invalid
+
+If you see any red X marks, double-check your API key configuration and try again.
 
 ## Troubleshooting
 

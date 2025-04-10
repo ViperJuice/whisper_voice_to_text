@@ -113,11 +113,19 @@ $env:DEEPSEEK_API_KEY="your-deepseek-api-key"    # Optional
 #### macOS/Linux:
 ```bash
 # Add to your .bashrc or .zshrc
-export OPENAI_API_KEY="your-openai-api-key"
-export ANTHROPIC_API_KEY="your-anthropic-api-key"  # Optional
-export GOOGLE_API_KEY="your-google-api-key"        # Optional
-export DEEPSEEK_API_KEY="your-deepseek-api-key"    # Optional
+export OPENAI_API_KEY="your-api-key-here"
+export ANTHROPIC_API_KEY="your-api-key-here"  # Optional
+export GOOGLE_API_KEY="your-api-key-here"     # Optional
+export DEEPSEEK_API_KEY="your-api-key-here"   # Optional
 ```
+
+To obtain API keys:
+- **OpenAI**: Visit [OpenAI Platform](https://platform.openai.com/api-keys)
+- **Anthropic**: Visit [Anthropic Console](https://console.anthropic.com/account/keys)
+- **Google**: Visit [Google MakerSuite](https://makersuite.google.com/app/apikey)
+- **Deepseek**: Visit [Deepseek Platform](https://platform.deepseek.com/)
+
+Note: You only need to configure the API keys for the services you plan to use. OpenAI is the default and recommended option.
 
 ### 6. Optional: Install Ollama (for Local LLM)
 

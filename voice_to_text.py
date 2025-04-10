@@ -231,11 +231,15 @@ def check_ollama_status():
                 return True, selected_model, available_models
             else:
                 print("✗ Ollama server is running but no models are available")
+                print("  To install a model, run: ollama pull llama3")
                 return False, None, []
         else:
             print("✗ Ollama server responded with an error")
             return False, None, []
     except requests.exceptions.ConnectionError:
+        print("✗ Ollama server is not running")
+        print("  To start Ollama, run: ollama serve")
+        print("  For installation instructions, visit: https://ollama.com/download")
         return False, None, []
     except Exception as e:
         print(f"✗ Error checking Ollama status: {e}")
@@ -876,6 +880,45 @@ def is_super_pressed():
             keyboard.Key.cmd_r in currently_pressed_keys)
 
 
+def check_api_keys():
+    """Check and report status of API keys"""
+    api_status = {
+        "openai": {
+            "key": OPENAI_API_KEY,
+            "name": "OpenAI",
+            "url": "https://platform.openai.com/api-keys",
+            "message": "Set OPENAI_API_KEY environment variable"
+        },
+        "anthropic": {
+            "key": ANTHROPIC_API_KEY,
+            "name": "Anthropic",
+            "url": "https://console.anthropic.com/account/keys",
+            "message": "Set ANTHROPIC_API_KEY environment variable"
+        },
+        "google": {
+            "key": GOOGLE_API_KEY,
+            "name": "Google",
+            "url": "https://makersuite.google.com/app/apikey",
+            "message": "Set GOOGLE_API_KEY environment variable"
+        },
+        "deepseek": {
+            "key": DEEPSEEK_API_KEY,
+            "name": "Deepseek",
+            "url": "https://platform.deepseek.com/",
+            "message": "Set DEEPSEEK_API_KEY environment variable"
+        }
+    }
+    
+    print("\nAPI Key Status:")
+    for provider, info in api_status.items():
+        if info["key"]:
+            print(f"✓ {info['name']} API key is configured")
+        else:
+            print(f"✗ {info['name']} API key is not configured")
+            print(f"  {info['message']}")
+            print(f"  Get your API key at: {info['url']}")
+
+
 def main():
     """Main function to set up and run the application"""
     # Detect GPU capabilities and recommend appropriate Whisper model
@@ -898,7 +941,8 @@ def main():
     if not setup_pop_os_dependencies():
         print("Failed to check dependencies. Some features may not work.")
     
-    # Check Ollama status and system capabilities
+    # Check API keys and Ollama status
+    check_api_keys()
     ollama_running, ollama_model, available_models = check_ollama_status()
     system_capable, system_specs = check_system_for_ollama()
     
@@ -908,17 +952,17 @@ def main():
     if ANTHROPIC_API_KEY:
         print("2. Anthropic API (available)")
     else:
-        print("2. Anthropic API (not configured - set ANTHROPIC_API_KEY to enable)")
+        print("2. Anthropic API (not configured)")
     
     if GOOGLE_API_KEY:
         print("3. Google Flash Light (available)")
     else:
-        print("3. Google Flash Light (not configured - set GOOGLE_API_KEY to enable)")
+        print("3. Google Flash Light (not configured)")
         
     if DEEPSEEK_API_KEY:
         print("4. Deepseek Lite (available)")
     else:
-        print("4. Deepseek Lite (not configured - set DEEPSEEK_API_KEY to enable)")
+        print("4. Deepseek Lite (not configured)")
     
     if ollama_running:
         print(f"5. Local Ollama LLM (available, using {ollama_model})")
