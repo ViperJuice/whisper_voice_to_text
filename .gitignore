@@ -1,0 +1,45 @@
+# Python virtual environments
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+tmp/
+
+# Log files
+*.log
+log/
+logs/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+
+# Jupyter Notebook
+.ipynb_checkpoints
