@@ -45,14 +45,26 @@ use_llm_enhancement = False
 # Currently pressed keys tracking
 currently_pressed_keys = set()
 
-# LLM API Configuration
-# API keys for fallback options - leave empty if not using
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
-LOCAL_LLM_URL = "http://localhost:11434/api/chat"  # Ollama default API endpoint
+# Get API keys from environment variables
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
 
 # If using Ollama, set the model name
-LOCAL_LLM_MODEL = "llama3"  # Standard model name in Ollama
+LOCAL_LLM_MODEL = "llama3"
+
+# LLM mode configuration
+CURRENT_LLM_MODE = "openai"  # Default to OpenAI
+
+# Available LLM modes
+LLM_MODES = {
+    "openai": "OpenAI API",
+    "anthropic": "Anthropic API",
+    "local": "Local Ollama",
+    "google": "Google Flash Light",
+    "deepseek": "Deepseek Lite"
+}
 
 
 def get_available_ollama_models():
@@ -219,22 +231,51 @@ def check_ollama_status():
                 return True, selected_model, available_models
             else:
                 print("✗ Ollama server is running but no models are available")
-                print("\nTo download a model, run:")
-                print("  ollama pull llama3")
                 return False, None, []
         else:
             print("✗ Ollama server responded with an error")
             return False, None, []
     except requests.exceptions.ConnectionError:
-        print("✗ Ollama server is not running")
-        print("\nTo start Ollama, open a new terminal and run:")
-        print("  ollama serve")
-        print("\nIf Ollama is not installed, install it with:")
-        print("  curl -fsSL https://ollama.com/install.sh | sh")
         return False, None, []
     except Exception as e:
         print(f"✗ Error checking Ollama status: {e}")
         return False, None, []
+
+
+def check_system_for_ollama():
+    """Check if the system has sufficient resources for Ollama"""
+    try:
+        # Check GPU capabilities
+        _, _, vram = detect_gpu_capabilities()
+        
+        # Check CPU cores
+        cpu_cores = os.cpu_count()
+        
+        # Check available RAM
+        import psutil
+        total_ram = psutil.virtual_memory().total / (1024**3)  # Convert to GB
+        
+        # Minimum requirements for Ollama
+        min_requirements = {
+            'vram': 4,  # GB
+            'cpu_cores': 4,
+            'ram': 8,  # GB
+        }
+        
+        # Check if system meets minimum requirements
+        meets_requirements = (
+            vram >= min_requirements['vram'] or
+            (cpu_cores >= min_requirements['cpu_cores'] and total_ram >= min_requirements['ram'])
+        )
+        
+        return meets_requirements, {
+            'vram': vram,
+            'cpu_cores': cpu_cores,
+            'ram': total_ram
+        }
+    except Exception as e:
+        print(f"Error checking system capabilities: {e}")
+        return False, {}
 
 
 def extract_refined_text(text):
@@ -262,62 +303,51 @@ def extract_refined_text(text):
 
 def refine_with_llm(text):
     """
-    Use an LLM to refine the transcribed text with cascading fallback:
-    1. Try local LLM (Ollama) first
-    2. Fall back to OpenAI if local fails and API key exists
-    3. Fall back to Anthropic if OpenAI fails and API key exists
-    4. Fall back to algorithmic cleanup if all LLMs fail
+    Use an LLM to refine the transcribed text based on the current mode:
+    - local: Use Ollama
+    - openai: Use OpenAI API
+    - anthropic: Use Anthropic API
+    If the selected mode fails, falls back to the next available option
     """
     if not text or len(text.strip()) < 5:
         return text
     
-    # Start with local LLM
-    try:
-        print("Attempting to refine with local LLM...")
-        refined_text = refine_with_local_llm(text)
-        refined_text = extract_refined_text(refined_text)  # Extract just the refined part
-        if refined_text and refined_text != text:
-            print("✓ Local LLM refinement successful")
-            return refined_text
-        else:
-            print("Local LLM returned incomplete or identical text, trying next option...")
-    except Exception as e:
-        print(f"Local LLM error: {e}")
-        print("Falling back to next option...")
+    # Try the selected mode first
+    if CURRENT_LLM_MODE == "local":
+        try:
+            print("Attempting to refine with local LLM...")
+            refined_text = refine_with_local_llm(text)
+            refined_text = extract_refined_text(refined_text)
+            if refined_text and refined_text != text:
+                print("✓ Local LLM refinement successful")
+                return refined_text
+        except Exception as e:
+            print(f"Local LLM error: {e}")
+            print("Falling back to next option...")
     
-    # Try OpenAI if available
-    if OPENAI_API_KEY:
+    if CURRENT_LLM_MODE == "openai" or (CURRENT_LLM_MODE == "local" and OPENAI_API_KEY):
         try:
             print("Attempting to refine with OpenAI API...")
             refined_text = refine_with_openai(text)
-            refined_text = extract_refined_text(refined_text)  # Extract just the refined part
+            refined_text = extract_refined_text(refined_text)
             if refined_text and refined_text != text:
                 print("✓ OpenAI API refinement successful")
                 return refined_text
-            else:
-                print("OpenAI API returned incomplete or identical text, trying next option...")
         except Exception as e:
             print(f"OpenAI API error: {e}")
             print("Falling back to next option...")
-    else:
-        print("OpenAI API key not set, skipping...")
     
-    # Try Anthropic if available
-    if ANTHROPIC_API_KEY:
+    if CURRENT_LLM_MODE == "anthropic" or (CURRENT_LLM_MODE in ["local", "openai"] and ANTHROPIC_API_KEY):
         try:
             print("Attempting to refine with Anthropic API...")
             refined_text = refine_with_anthropic(text)
-            refined_text = extract_refined_text(refined_text)  # Extract just the refined part
+            refined_text = extract_refined_text(refined_text)
             if refined_text and refined_text != text:
                 print("✓ Anthropic API refinement successful")
                 return refined_text
-            else:
-                print("Anthropic API returned incomplete or identical text, falling back...")
         except Exception as e:
             print(f"Anthropic API error: {e}")
             print("Falling back to algorithmic cleanup...")
-    else:
-        print("Anthropic API key not set, skipping...")
     
     # If all LLM options failed, use algorithmic cleanup
     print("All LLM options exhausted or failed, using algorithmic cleanup...")
@@ -739,6 +769,7 @@ def setup_pop_os_dependencies():
 
 def on_press(key):
     """Handle key press events"""
+    global CURRENT_LLM_MODE
     try:
         # Add the key to currently pressed keys
         if hasattr(key, 'char'):
@@ -749,15 +780,49 @@ def on_press(key):
         # Check for Super+Space combination for simple mode
         if (keyboard.Key.space in currently_pressed_keys and 
             is_super_pressed() and 
-            keyboard.Key.alt not in currently_pressed_keys):
+            keyboard.Key.alt not in currently_pressed_keys and
+            keyboard.Key.ctrl not in currently_pressed_keys):
             start_recording(with_llm=False)
         
         # Check for Super+Alt+Space combination for LLM-enhanced mode
         elif (keyboard.Key.space in currently_pressed_keys and 
               is_super_pressed() and 
               keyboard.Key.alt in currently_pressed_keys):
-            start_recording(with_llm=True)
-            
+            # Check for mode switching keys (O/C/L/G/D) while holding Super+Alt+Space
+            if hasattr(key, 'char'):
+                if key.char.lower() == 'o':
+                    CURRENT_LLM_MODE = "openai"
+                    print("Switched to OpenAI mode")
+                elif key.char.lower() == 'c':
+                    if ANTHROPIC_API_KEY:
+                        CURRENT_LLM_MODE = "anthropic"
+                        print("Switched to Anthropic mode")
+                    else:
+                        print("Anthropic API key not configured. Set ANTHROPIC_API_KEY environment variable to enable.")
+                elif key.char.lower() == 'l':
+                    CURRENT_LLM_MODE = "local"
+                    print("Switched to Local LLM mode")
+                elif key.char.lower() == 'g':
+                    if GOOGLE_API_KEY:
+                        CURRENT_LLM_MODE = "google"
+                        print("Switched to Google Flash Light mode")
+                    else:
+                        print("Google API key not configured. Set GOOGLE_API_KEY environment variable to enable.")
+                elif key.char.lower() == 'd':
+                    if DEEPSEEK_API_KEY:
+                        CURRENT_LLM_MODE = "deepseek"
+                        print("Switched to Deepseek Lite mode")
+                    else:
+                        print("Deepseek API key not configured. Set DEEPSEEK_API_KEY environment variable to enable.")
+            else:
+                start_recording(with_llm=True)
+        
+        # Exit on Escape key
+        if key == keyboard.Key.esc:
+            global is_running
+            is_running = False
+            stop_recording()
+            return False
     except Exception as e:
         print(f"Error in on_press: {e}")
 
@@ -816,22 +881,56 @@ def main():
     if not setup_pop_os_dependencies():
         print("Failed to check dependencies. Some features may not work.")
     
-    print("\n=== Voice-to-Text with Dual Mode and Cascading LLM Fallback ===")
-    print("\nLLM Fallback Chain (for enhanced mode):")
-    print(f"1. Local Ollama LLM (primary, using {LOCAL_LLM_MODEL})")
-    if OPENAI_API_KEY:
-        print("2. OpenAI API (fallback if local fails)")
-    else:
-        print("2. OpenAI API (not configured - set OPENAI_API_KEY to enable)")
+    # Check Ollama status and system capabilities
+    ollama_running, ollama_model, available_models = check_ollama_status()
+    system_capable, system_specs = check_system_for_ollama()
+    
+    print("\n=== Voice-to-Text with Dual Mode and LLM Enhancement ===")
+    print("\nLLM Configuration:")
+    print("1. OpenAI API (default)")
     if ANTHROPIC_API_KEY:
-        print("3. Anthropic API (fallback if OpenAI fails)")
+        print("2. Anthropic API (available)")
     else:
-        print("3. Anthropic API (not configured - set ANTHROPIC_API_KEY to enable)")
-    print("4. Algorithmic cleanup (final fallback)")
+        print("2. Anthropic API (not configured - set ANTHROPIC_API_KEY to enable)")
+    
+    if GOOGLE_API_KEY:
+        print("3. Google Flash Light (available)")
+    else:
+        print("3. Google Flash Light (not configured - set GOOGLE_API_KEY to enable)")
+        
+    if DEEPSEEK_API_KEY:
+        print("4. Deepseek Lite (available)")
+    else:
+        print("4. Deepseek Lite (not configured - set DEEPSEEK_API_KEY to enable)")
+    
+    if ollama_running:
+        print(f"5. Local Ollama LLM (available, using {ollama_model})")
+    elif system_capable:
+        print("\n💡 Your system appears capable of running Ollama:")
+        print(f"  - GPU VRAM: {system_specs['vram']:.1f}GB")
+        print(f"  - CPU Cores: {system_specs['cpu_cores']}")
+        print(f"  - RAM: {system_specs['ram']:.1f}GB")
+        print("\n  Consider installing Ollama for local, private LLM processing:")
+        print("  curl -fsSL https://ollama.com/install.sh | sh")
+        print("  ollama pull llama3")
+        print("  ollama serve")
+    
+    print("\nLLM Mode Selection:")
+    print("Super+Alt+Space+O: Switch to OpenAI mode")
+    if ANTHROPIC_API_KEY:
+        print("Super+Alt+Space+C: Switch to Anthropic mode")
+    if GOOGLE_API_KEY:
+        print("Super+Alt+Space+G: Switch to Google Flash Light mode")
+    if DEEPSEEK_API_KEY:
+        print("Super+Alt+Space+D: Switch to Deepseek Lite mode")
+    if ollama_running:
+        print("Super+Alt+Space+L: Switch to Local LLM mode")
+    print(f"\nCurrent LLM mode: {CURRENT_LLM_MODE}")
     
     print("\nHotkeys:")
     print("⏺️  Super+Space: Simple transcription with basic cleanup")
     print("✨ Super+Alt+Space: Enhanced transcription with LLM refinement")
+    print("🔄 Super+Alt+Space+O/C/G/D/L: Switch LLM mode")
     print("❌ Esc: Exit the program")
     
     print("\nReady to use! Press the hotkeys to start recording...")

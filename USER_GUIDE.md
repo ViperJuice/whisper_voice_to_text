@@ -19,7 +19,14 @@ This guide provides comprehensive instructions for using the voice-to-text tool 
    - Speak into your microphone
    - Release the keys to process with LLM refinement
 
-4. **Exit the application**:
+4. **Switch LLM Modes** (Enhanced Mode only):
+   - Press **Super+Alt+Space+O** for OpenAI
+   - Press **Super+Alt+Space+C** for Anthropic
+   - Press **Super+Alt+Space+G** for Google Flash Light
+   - Press **Super+Alt+Space+D** for Deepseek Lite
+   - Press **Super+Alt+Space+L** for Local LLM
+
+5. **Exit the application**:
    - Press **Esc** key
 
 ## Detailed Features
@@ -41,18 +48,56 @@ This mode is:
 
 ### Enhanced Mode (Super+Alt+Space)
 
-Enhanced Mode uses a cascading LLM system to significantly improve text quality:
+Enhanced Mode uses a flexible LLM system to significantly improve text quality:
 
 - Intelligently removes filler words and unnecessary phrases
 - Improves sentence structure and clarity
 - Maintains your personal speaking style
 - Makes text more concise and professional
 
-The system tries multiple LLM options in this order:
-1. **Local Ollama LLM** (primary, fastest, private)
-2. **OpenAI API** (first fallback, if configured)
-3. **Anthropic API** (second fallback, if configured)
-4. **Algorithmic cleanup** (final fallback)
+You can choose between five LLM options:
+
+1. **OpenAI API** (default)
+   - Powerful cloud-based model
+   - Requires API key
+   - Best for complex language tasks
+
+2. **Anthropic API**
+   - High-quality cloud-based model
+   - Requires API key
+   - Excellent for natural language
+
+3. **Google Flash Light**
+   - Fast and efficient cloud-based model
+   - Requires API key
+   - Great for quick responses
+
+4. **Deepseek Lite**
+   - Lightweight cloud-based model
+   - Requires API key
+   - Good balance of speed and quality
+
+5. **Local Ollama LLM**
+   - Private and fast
+   - Works completely offline
+   - Requires Ollama installation
+
+The system will:
+- Use your selected LLM mode first
+- Automatically fall back to other available options if the selected mode fails
+- Finally use algorithmic cleanup if all LLM options fail
+
+### LLM Mode Switching
+
+You can switch between LLM modes at any time using these hotkeys:
+
+- **Super+Alt+Space+O**: Switch to OpenAI mode
+- **Super+Alt+Space+C**: Switch to Anthropic mode
+- **Super+Alt+Space+G**: Switch to Google Flash Light mode
+- **Super+Alt+Space+D**: Switch to Deepseek Lite mode
+- **Super+Alt+Space+L**: Switch to Local LLM mode
+
+The current mode is displayed in the terminal, and the system will remember your selection until you change it.
 
 ## Optimizing Performance
 
@@ -115,6 +160,12 @@ export OPENAI_API_KEY="your-api-key-here"
 
 # For Anthropic (add to .bashrc or .zshrc)
 export ANTHROPIC_API_KEY="your-api-key-here"
+
+# For Google (add to .bashrc or .zshrc)
+export GOOGLE_API_KEY="your-api-key-here"
+
+# For Deepseek (add to .bashrc or .zshrc)
+export DEEPSEEK_API_KEY="your-api-key-here"
 ```
 
 ## Troubleshooting
