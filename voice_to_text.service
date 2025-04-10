@@ -1,13 +1,14 @@
 [Unit]
-Description=Ollama Service
-After=network.target
+Description=Voice to Text Service
+After=network.target ollama.service
 
 [Service]
 Type=simple
 User=jenner
 Environment="PATH=/usr/local/bin:/usr/bin:/bin"
 Environment="HOME=/home/jenner"
-ExecStart=/usr/local/bin/ollama serve
+WorkingDirectory=/home/jenner/voice_to_text
+ExecStart=/usr/bin/python3 voice_to_text.py
 Restart=always
 RestartSec=10
 
