@@ -1,248 +1,175 @@
-# Dual-Mode Voice-to-Text
+# Voice to Text with LLM Enhancement
 
-A powerful voice-to-text tool with dual operating modes and intelligent LLM refinement, compatible with Windows, macOS, and Linux.
+A powerful voice transcription tool that uses OpenAI's Whisper model for high-quality speech-to-text conversion and various LLM models for enhancing transcriptions.
 
 ## Features
 
-- **Two Operation Modes:**
-  - **Simple Mode (Super+Space):** Fast transcription with basic cleanup
-  - **Enhanced Mode (Super+Alt+Space):** Polished transcription with LLM refinement
-  
-- **Flexible LLM Selection:**
-  - **OpenAI API** (default, cloud-based)
-  - **Anthropic API** (optional, cloud-based)
-  - **Google Flash Light** (optional, cloud-based)
-  - **Deepseek Lite** (optional, cloud-based)
-  - **Local Ollama LLM** (optional, private)
-  - Hotkey switching between available LLM modes
-  - Intelligent system assessment for Ollama compatibility
+- **Real-time transcription** using OpenAI's Whisper model
+- **GPU acceleration** for faster transcription (when available)
+- **LLM-enhanced transcriptions** with support for multiple models:
+  - OpenAI (GPT)
+  - Claude (Anthropic)
+  - Google (Gemini)
+  - DeepSeek
+  - Ollama (local models)
+- **Convenient hotkeys** for controlling recording and switching between models
+- **Cross-platform support** for Windows, macOS, and Linux
+- **Automatic cleanup** of temporary files
+- **Graceful fallback** to local models when API keys are unavailable
 
-- **Smart System Detection:**
-  - Automatic GPU capability detection
-  - Optimal Whisper model recommendation
-  - Ollama compatibility check
-  - Cross-platform compatibility
+## System Requirements
 
-- **User-Friendly Interface:**
-  - Push-to-talk operation (hold keys while speaking)
-  - Direct text insertion at cursor position
-  - Clear terminal feedback
-  - Easy LLM mode switching
-
-## Requirements
-
-- Python 3.8+ with pip
-- CUDA-compatible GPU recommended (but works on CPU)
-- Microphone
-- Operating System:
-  - Windows 10/11
-  - macOS 10.15+
-  - Linux (tested on Pop!_OS, Ubuntu, Fedora)
+- Python 3.8-3.11
+- FFmpeg (for audio processing)
+- PortAudio (for audio recording)
+- API keys for LLM services (optional, for enhanced transcription)
+- NVIDIA GPU (optional, for acceleration)
+- uv (optional, recommended for faster package installation)
 
 ## Installation
 
-### 1. Clone the Repository
+### Windows
+
+1. Download or clone this repository
+2. Choose one of the following installation methods:
+   - **Option 1:** Double-click `install-windows.bat`
+   - **Option 2:** Right-click `run-windows.ps1` and select "Run with PowerShell"
+3. Run the application using one of the following methods:
+   - **Option 1:** Double-click `run-windows-simple.bat` (simplest method)
+   - **Option 2:** Right-click `run-windows.ps1` and select "Run with PowerShell" (recommended)
+   - **Option 3:** From PowerShell, run `.\.venv\Scripts\activate; python main.py`
+
+### macOS
+
+1. Download or clone this repository
+2. Open Terminal in the project directory
+3. Make the installation script executable: `chmod +x install-mac.sh`
+4. Run the installation script: `./install-mac.sh`
+5. Run the application: `./run-mac.sh`
+
+### Linux
+
+1. Download or clone this repository
+2. Open Terminal in the project directory
+3. Make the installation script executable: `chmod +x install-linux.sh`
+4. Run the installation script: `./install-linux.sh`
+5. Run the application: `./run-linux.sh`
+
+## Using uv Package Installer (Recommended)
+
+This project supports [uv](https://github.com/astral-sh/uv), a faster Python package installer. The scripts will automatically detect and use uv if it's installed. To install uv:
 
 ```bash
-git clone https://github.com/yourusername/voice-to-text.git
-cd voice-to-text
-```
-
-### 2. Create and Activate Virtual Environment
-
-```bash
-# Using venv
-python -m venv .venv
-
-# Activate virtual environment
-# Windows:
-.venv\Scripts\activate
-# macOS/Linux:
-source .venv/bin/activate
-
-# OR using uv (faster, recommended)
+# Install uv
 pip install uv
-uv venv
 
-# Activate virtual environment
-# Windows:
-.venv\Scripts\activate
-# macOS/Linux:
-source .venv/bin/activate
+# Or on Windows with PowerShell
+pip install uv
 ```
 
-### 3. Install Dependencies
-
-```bash
-# Using pip
-pip install -r requirements.txt
-
-# OR using uv (faster)
-uv pip install -r requirements.txt
-```
-
-### 4. Install System Dependencies
-
-#### Windows:
-1. Install [PortAudio](https://www.portaudio.com/download.html)
-2. Install [FFmpeg](https://ffmpeg.org/download.html) and add it to your PATH
-
-#### macOS:
-```bash
-brew install portaudio ffmpeg
-```
-
-#### Linux:
-```bash
-sudo apt install -y ffmpeg portaudio19-dev
-```
-
-### 5. Configure API Keys
-
-Set environment variables for your preferred LLM services:
-
-#### Windows:
-```powershell
-# Add to your PowerShell profile
-$env:OPENAI_API_KEY="your-openai-api-key"
-$env:ANTHROPIC_API_KEY="your-anthropic-api-key"  # Optional
-$env:GOOGLE_API_KEY="your-google-api-key"        # Optional
-$env:DEEPSEEK_API_KEY="your-deepseek-api-key"    # Optional
-```
-
-#### macOS/Linux:
-```bash
-# Add to your .bashrc or .zshrc
-export OPENAI_API_KEY="your-api-key-here"
-export ANTHROPIC_API_KEY="your-api-key-here"  # Optional
-export GOOGLE_API_KEY="your-api-key-here"     # Optional
-export DEEPSEEK_API_KEY="your-api-key-here"   # Optional
-```
-
-To obtain API keys:
-- **OpenAI**: Visit [OpenAI Platform](https://platform.openai.com/api-keys)
-- **Anthropic**: Visit [Anthropic Console](https://console.anthropic.com/account/keys)
-- **Google**: Visit [Google MakerSuite](https://makersuite.google.com/app/apikey)
-- **Deepseek**: Visit [Deepseek Platform](https://platform.deepseek.com/)
-
-Note: You only need to configure the API keys for the services you plan to use. OpenAI is the default and recommended option.
-
-### 6. Optional: Install Ollama (for Local LLM)
-
-The application will automatically check if your system is capable of running Ollama and provide installation instructions if appropriate.
-
-#### Windows:
-1. Download and install from [Ollama website](https://ollama.com/download)
-2. Add Ollama to your PATH
-
-#### macOS:
-```bash
-brew install ollama
-```
-
-#### Linux:
-```bash
-curl -fsSL https://ollama.com/install.sh | sh
-```
-
-After installation, pull the recommended model:
-```bash
-ollama pull llama3
-```
+Benefits of using uv:
+- Faster dependency installation
+- Better caching of packages
+- Improved reliability for GPU-accelerated packages
 
 ## Usage
 
-### Starting the Application
+Once the application is running, you can use the following hotkeys:
 
-#### Windows:
-```powershell
-python voice_to_text.py
+### Windows Hotkeys
+- `alt+win` = Simple mode (hold to start recording, release to transcribe with Whisper)
+- `alt+win+ctrl` = Enhanced mode (hold to start recording, release to transcribe with Whisper and enhance with LLM)
+- `alt+win+o` = Toggle mode (switch between local Whisper and OpenAI API transcription)
+- `alt+win+ctrl+o` = OpenAI Enhanced (transcribe with Whisper and enhance with OpenAI)
+- `alt+win+ctrl+g` = Gemini Enhanced (transcribe with Whisper and enhance with Google Gemini)
+- `alt+win+ctrl+d` = DeepSeek Enhanced (transcribe with Whisper and enhance with DeepSeek)
+- `alt+win+ctrl+c` = Claude Enhanced (transcribe with Whisper and enhance with Claude)
+- `alt+win+ctrl+s` = Stop recording
+- `esc` = Exit application
+- `alt+win+ctrl+x` = Cleanup temporary files
+
+### macOS Hotkeys
+- `option+command` = Simple mode
+- `option+command+control` = Enhanced mode
+- `option+command+o` = Toggle mode
+- `option+command+control+o` = OpenAI Enhanced
+- `option+command+control+g` = Gemini Enhanced
+- `option+command+control+d` = DeepSeek Enhanced
+- `option+command+control+c` = Claude Enhanced
+- `option+command+control+s` = Stop recording
+- `esc` = Exit application
+- `option+command+control+x` = Cleanup temporary files
+
+### Linux Hotkeys
+- `alt+super` = Simple mode
+- `alt+super+ctrl` = Enhanced mode
+- `alt+super+o` = Toggle mode
+- `alt+super+ctrl+o` = OpenAI Enhanced
+- `alt+super+ctrl+g` = Gemini Enhanced
+- `alt+super+ctrl+d` = DeepSeek Enhanced
+- `alt+super+ctrl+c` = Claude Enhanced
+- `alt+super+ctrl+s` = Stop recording
+- `esc` = Exit application
+- `alt+super+ctrl+x` = Cleanup temporary files
+
+Note: The default transcription mode is Whisper with the ability to toggle to OpenAI API transcription.
+
+## Setting up API Keys
+
+For enhanced transcription using LLM models, you'll need to set up API keys for the respective services:
+
+1. Create a file named `.env` in the project root directory
+2. Add your API keys in the following format:
+```
+OPENAI_API_KEY=your_openai_key_here
+ANTHROPIC_API_KEY=your_anthropic_key_here
+GOOGLE_API_KEY=your_google_key_here
+DEEPSEEK_API_KEY=your_deepseek_key_here
 ```
 
-#### macOS/Linux:
-```bash
-# Simple start
-python voice_to_text.py
+If no API keys are provided, the application will fall back to using Ollama with a local model.
 
-# OR use the launcher script to filter ALSA warnings (Linux only)
-./run_voice_to_text.sh
-```
+### Setting up Ollama (Optional)
 
-### Using Voice-to-Text
+For local LLM processing without API keys:
 
-1. **Simple Mode:**
-   - Press and hold **Super+Space** (Windows/Command key + Space)
-   - Speak into your microphone
-   - Release the keys to process and insert text
+1. Download and install Ollama from [ollama.ai](https://ollama.ai/download)
+2. Pull a model: `ollama pull llama3`
+3. The application will automatically detect and use Ollama if no API keys are set
 
-2. **Enhanced Mode:**
-   - Press and hold **Super+Alt+Space**
-   - Speak into your microphone
-   - Release the keys to process with LLM refinement
+## Improvements in This Version
 
-3. **LLM Mode Switching:**
-   - **Super+Alt+Space+O**: Switch to OpenAI mode (default)
-   - **Super+Alt+Space+C**: Switch to Anthropic mode (if configured)
-   - **Super+Alt+Space+G**: Switch to Google Flash Light mode (if configured)
-   - **Super+Alt+Space+D**: Switch to Deepseek Lite mode (if configured)
-   - **Super+Alt+Space+L**: Switch to Local LLM mode (if Ollama is running)
-
-4. **Exit:**
-   - Press **Esc** key
-
-## Configuration
-
-You can modify the following variables in `voice_to_text.py`:
-
-- `CHUNK`, `FORMAT`, `CHANNELS`, `RATE`: Adjust audio recording parameters
-- Customize the cleanup patterns in `algorithmic_cleanup()`
+- **Resilient installation scripts** that work with pre-existing dependencies
+- **Enhanced error handling** with informative messages
+- **PowerShell support** for better Windows integration
+- **Automatic FFmpeg detection** with installation suggestions
+- **GPU detection** for optimal Whisper model selection
+- **Better compatibility** with Python 3.8-3.11
+- **uv support** for faster package installation
 
 ## Troubleshooting
 
-### Audio Issues
+- **Keyboard hotkeys not working**: 
+  - On macOS, grant accessibility permissions to Terminal or your preferred terminal app.
+  - On Linux, ensure that you're running the application with appropriate permissions.
+  - On Windows, try running as Administrator if hotkeys aren't responding.
 
-- Check microphone connection and permissions
-- Ensure proper audio drivers are installed
-- Try adjusting the `RATE` and `CHUNK` variables
+- **Audio not recording**:
+  - Verify that your microphone is properly connected and selected as the default recording device.
+  - Ensure that PortAudio is properly installed.
+  - Check that FFmpeg is installed and in your system PATH.
 
-### LLM Connectivity
+- **LLM enhancement not working**:
+  - Verify that your API keys are correctly set up in the `.env` file.
+  - Check your internet connection.
+  - Ensure that the API services are available and your account is active.
+  - For Ollama, ensure the service is running with `ollama serve` command.
 
-- For OpenAI: Verify API key is correctly set
-- For Anthropic: Verify API key is correctly set (if using)
-- For local LLM: Ensure Ollama is running (if using)
-
-### Performance Issues
-
-- Try a smaller Whisper model if transcription is slow
-- Ensure your GPU drivers are up to date
-- Close other GPU-intensive applications
-
-## How It Works
-
-1. **Recording:**
-   - Audio is captured when hotkeys are pressed
-   - Raw audio is saved as a temporary WAV file
-
-2. **Transcription:**
-   - OpenAI's Whisper model processes the audio
-   - Raw text is extracted from the transcription
-
-3. **Refinement:**
-   - Simple Mode: Basic algorithmic cleanup
-   - Enhanced Mode: LLM refinement using selected provider
-
-4. **Insertion:**
-   - Refined text is typed at the current cursor position
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+- **Installation fails on Windows**:
+  - Try running the PowerShell script instead of the batch file.
+  - Ensure you have permission to create directories in the project folder.
+  - If using uv fails, the scripts will automatically fall back to standard pip.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- [OpenAI Whisper](https://github.com/openai/whisper) for the speech recognition model
-- [Ollama](https://ollama.com/) for the local LLM capabilities
+[MIT License](LICENSE)
