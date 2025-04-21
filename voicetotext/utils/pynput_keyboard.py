@@ -42,7 +42,8 @@ class PynputKeyboardHandler:
         71: 'g',       # G key
         68: 'd',       # D key
         67: 'c',       # C key
-        84: 't'        # T key
+        84: 't',       # T key
+        32: 'space'    # Space key
     }
 
     # Special key mapping for pynput Key enum
@@ -51,6 +52,7 @@ class PynputKeyboardHandler:
         Key.ctrl_l: (17, 'ctrl_l'),
         Key.cmd: (91, 'win'),
         Key.esc: (27, 'esc'),
+        Key.space: (32, 'space'),
     }
     
     def __init__(self, config):
@@ -108,7 +110,10 @@ class PynputKeyboardHandler:
             
             # Finally check for character keys
             if hasattr(key, 'char') and key.char:
-                normalized = key.char.lower()
+                if key.char == ' ':
+                    normalized = 'space'
+                else:
+                    normalized = key.char.lower()
                 print(f"Character key normalized to: {normalized}")
                 return normalized
             
@@ -360,31 +365,32 @@ class PynputKeyboardHandler:
             self.hotkeys = {
                 # Simple mode
                 "start_simple": {
-                    "required_keys": set(["alt_l", "super"])
+                    "required_keys": set(["alt_l"])
                 },
                 # Enhanced mode (Local Ollama default)
                 "start_enhanced": {
-                    "required_keys": set(["alt_l", "super", "ctrl_l"])
+                    "required_keys": set(["alt_l", "win"])
                 },
                 # Toggle mode
                 "toggle_mode": {
-                    "required_keys": set(["alt_l", "super", "t"])
+                    "required_keys": set(["alt_l", "t"])
                 },
                 # Model-specific enhanced modes
                 "start_openai": {
-                    "required_keys": set(["alt_l", "super", "ctrl_l", "o"])
+                    "required_keys": set(["alt_l", "win", "o"])
                 },
                 "start_gemini": {
+                    "required_keys": set(["alt_l", "win", "g"])
                 },
                 "start_deepseek": {
-                    "required_keys": set(["alt_l", "super", "ctrl_l", "d"])
+                    "required_keys": set(["alt_l", "win", "d"])
                 },
                 "start_claude": {
-                    "required_keys": set(["alt_l", "super", "ctrl_l", "c"])
+                    "required_keys": set(["alt_l", "win", "c"])
                 },
                 # Action hotkeys
                 "stop": {
-                    "required_keys": set(["alt_l", "super", "ctrl_l", "s"])
+                    "required_keys": set(["alt_l", "win", "s"])
                 },
                 "exit": {
                     "required_keys": set(["esc"])

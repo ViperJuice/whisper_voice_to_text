@@ -10,6 +10,23 @@ import pyaudio
 import wave
 import sys
 import os
+import ctypes
+import logging
+
+# Silence ALSA lib warnings to stderr
+try:
+    asound = ctypes.cdll.LoadLibrary('libasound.so')
+    ERROR_HANDLER_FUNC = ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p)
+
+    def py_error_handler(filename, line, function, err, fmt):
+        return
+
+    c_error_handler = ERROR_HANDLER_FUNC(py_error_handler)
+    asound.snd_lib_error_set_handler(c_error_handler)
+except Exception:
+    pass
+
+logger = logging.getLogger(__name__)
 
 class RecorderController:
     """Controller for recording audio from microphone"""
@@ -67,7 +84,7 @@ class RecorderController:
             self.target_file = target_file
             
         print(f"[Recorder] Starting audio capture")
-        print(f"[Recorder] *** DEBUG: PyAudio FORMAT={self.format}, CHANNELS={self.channels}, RATE={self.rate}, CHUNK={self.chunk}")
+        logger.debug("PyAudio FORMAT=%s, CHANNELS=%s, RATE=%s, CHUNK=%s", self.format, self.channels, self.rate, self.chunk)
         
         try:
             self.p = pyaudio.PyAudio()

@@ -124,4 +124,43 @@ echo "To run the application:"
 echo "- Run ./run-mac.sh"
 echo "- Or run 'python main.py' in the terminal after activating the environment"
 echo
-echo "Enjoy using Voice to Text with LLM Enhancement!" 
+echo "Enjoy using Voice to Text with LLM Enhancement!"
+
+# -----------------------------------------------------------------------------
+# Create Desktop launcher (.command) for macOS so users can double‑click.
+# -----------------------------------------------------------------------------
+
+# Determine project dir and icon
+PROJECT_DIR="$(pwd)"
+ICON_SRC=""
+if [ -f "$PROJECT_DIR/icon.png" ]; then
+  ICON_SRC="$PROJECT_DIR/icon.png"
+elif [ -f "$PROJECT_DIR/resources/icon.png" ]; then
+  ICON_SRC="$PROJECT_DIR/resources/icon.png"
+fi
+
+DESKTOP_DIR="$HOME/Desktop"
+mkdir -p "$DESKTOP_DIR"
+
+LAUNCHER="$DESKTOP_DIR/Keyless.command"
+
+cat > "$LAUNCHER" <<EOF
+#!/usr/bin/env bash
+cd "$PROJECT_DIR"
+./run-mac.sh
+EOF
+
+chmod +x "$LAUNCHER"
+
+echo "Created desktop launcher at $LAUNCHER (double‑click to start)."
+
+# Try to set icon (only works on macOS Finder, requires AppleScript)
+if [ -n "$ICON_SRC" ] && command -v osascript &>/dev/null; then
+  osascript - <<OSA
+  on run argv
+    set theFile to POSIX file "${LAUNCHER}" as alias
+    set theIcon to POSIX file "${ICON_SRC}" as alias
+    tell application "Finder" to set icon of theFile to theIcon
+  end run
+OSA
+fi 

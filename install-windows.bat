@@ -211,4 +211,22 @@ echo To use this installation:
 echo 1. Always run the application using run-windows.ps1
 echo 2. The script will automatically set up the environment
 echo 3. Python and FFmpeg are installed locally in this directory
-pause 
+pause
+
+REM -----------------------------------------------------------------------------
+REM Create Desktop Shortcut (Keyless Voice-to-Text)
+REM -----------------------------------------------------------------------------
+
+echo Creating desktop shortcut...
+
+powershell -NoLogo -NoProfile -Command ^
+    "$WshShell = New-Object -ComObject WScript.Shell;" ^
+    "$desktop = [Environment]::GetFolderPath('Desktop');" ^
+    "$shortcut = $WshShell.CreateShortcut([IO.Path]::Combine($desktop, 'Keyless Voice-to-Text.lnk'));" ^
+    "$shortcut.TargetPath = '%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe';" ^
+    "$shortcut.Arguments = '-ExecutionPolicy Bypass -NoLogo -File \"%~dp0run-windows.ps1\"';" ^
+    "$shortcut.IconLocation = '%~dp0resources\\icon.png';" ^
+    "$shortcut.WorkingDirectory = '%~dp0';" ^
+    "$shortcut.Save();"
+
+echo Desktop shortcut created on %USERPROFILE%\Desktop. 

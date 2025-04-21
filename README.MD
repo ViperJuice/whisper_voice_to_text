@@ -52,7 +52,7 @@ A powerful voice transcription tool that uses OpenAI's Whisper model for high-qu
 1. Download or clone this repository
 2. Open Terminal in the project directory
 3. Make the installation script executable: `chmod +x install-linux.sh`
-4. Run the installation script: `./install-linux.sh`
+4. Run the installation script: `sudo ./install-linux.sh`
 5. Run the application: `./run-linux.sh`
 
 ## Using uv Package Installer (Recommended)
@@ -173,3 +173,17 @@ For local LLM processing without API keys:
 ## License
 
 [MIT License](LICENSE)
+
+### Desktop Shortcuts (auto-generated)
+
+After running the corresponding **install-*.sh / .bat** script a desktop launcher is created automatically so you can start Keyless with a double-click.
+
+| OS | Shortcut created | Notes |
+|----|------------------|-------|
+| Linux | `~/Desktop/Keyless.desktop` | Uses the provided `icon.png`, runs `run-linux.sh` inside a terminal.  If your file manager asks you to *trust* the launcher, choose *Yes*. |
+| macOS | `~/Desktop/Keyless.command` | A self-contained shell script that `cd`s into the project folder and executes `run-mac.sh`.  Double-click to run (macOS may prompt to allow execution the first time). |
+| Windows | `Keyless Voice-to-Text.lnk` on your desktop | Points to PowerShell with arguments to execute `run-windows.ps1`, icon set to `icon.png`.  If SmartScreen warns you, choose *More info → Run anyway*. |
+
+**Linux trust prompt**: On GNOME/Unity you may see "Untrusted Desktop File" the first time.  Right‑click the shortcut and select **Allow Launching**.  The installer tries to pre‑approve the file but some desktop environments still show the prompt.
+
+If the icon does not appear, make sure `icon.png` remains inside the project folder; the `.desktop` file uses an absolute path so moving the folder will break the icon until you reinstall.

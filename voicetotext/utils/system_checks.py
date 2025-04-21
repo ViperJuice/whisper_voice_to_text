@@ -14,6 +14,7 @@ import sys
 import subprocess
 import torch
 import logging
+import time
 
 # ---------------------------------------------------------------------------
 # Module‑level logger; legacy print calls are routed to logger.info so they
@@ -461,15 +462,42 @@ def system_check():
     selected_model = None
     available_models = []
     
-    # Only check Ollama if system meets requirements
-    if can_run_ollama:
-        ollama_running, selected_model, available_models = check_ollama_status()
-    
-    # If Ollama not available, check for models
-    if not selected_model and can_run_ollama:
+    # If Ollama not available, attempt to start it (if binary exists) and pull a default model
+    if can_run_ollama and not ollama_running:
+        # Try to start ollama in the background (non‑blocking)
+        try:
+            print("Ollama server not running. Attempting to start it in the background ...")
+            subprocess.Popen(["ollama", "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            # Give it a couple seconds to start
+            time.sleep(3)
+            # Update running status
+            ollama_running, _, _ = check_ollama_status()
+            if ollama_running:
+                print("✓ Ollama server started successfully")
+            else:
+                print("✗ Failed to start Ollama server automatically. You may need to run 'ollama serve' manually.")
+        except FileNotFoundError:
+            print("✗ 'ollama' CLI not found. Please ensure Ollama is installed and on PATH.")
+
+    # If Ollama is running but no suitable model selected yet, check models
+    if not selected_model and can_run_ollama and ollama_running:
         selected_model, available_models = get_available_ollama_models()
         if selected_model:
             print(f"Selected Ollama model: {selected_model}")
+        else:
+            # No models available: attempt to pull a sensible default
+            default_model = select_default_ollama_model(vram)
+            print(f"No Ollama models found. Attempting to pull default model '{default_model}' ...")
+            try:
+                pull_proc = subprocess.run(["ollama", "pull", default_model], check=False)
+                if pull_proc.returncode == 0:
+                    print(f"✓ Successfully pulled '{default_model}'. Re‑checking available models ...")
+                    # Re-query models list
+                    selected_model, available_models = get_available_ollama_models()
+                else:
+                    print(f"✗ Failed to pull model '{default_model}'. You may need to pull a model manually (e.g. 'ollama pull llama3').")
+            except FileNotFoundError:
+                print("✗ 'ollama' CLI not found. Please ensure Ollama is installed and on PATH.")
     
     # Determine LLM availability
     can_use_llm = ollama_running and selected_model is not None
@@ -520,6 +548,37 @@ def system_check():
         "transcription_services": services,
         "available_transcription_modes": get_available_transcription_modes()
     }
+
+# ---------------------------------------------------------------------------
+# Ollama default‑model selection based on GPU VRAM
+# ---------------------------------------------------------------------------
+
+def select_default_ollama_model(vram_gb: int) -> str:
+    """Choose a sensible default Ollama model tag given available GPU VRAM.
+
+    Rules (heuristic):
+        • >=36 GB   → llama3:70b (70‑billion params)
+        • >=18 GB   → llama3:instruct (34‑b params)  
+        • >=12 GB   → llama3 (8‑b params)
+        • >=8  GB   → mistral:instruct (7‑b params)
+        • >=4  GB   → phi3 (3.8‑b params)
+        • <4  GB   → phi (tiny model)
+    """
+    try:
+        v = int(vram_gb)
+    except Exception:
+        v = 0
+    if v >= 36:
+        return "llama3:70b"
+    if v >= 18:
+        return "llama3:instruct"
+    if v >= 12:
+        return "llama3"
+    if v >= 8:
+        return "mistral:instruct"
+    if v >= 4:
+        return "phi3"
+    return "phi"
 
 if __name__ == "__main__":
     # Run system check when script is executed directly

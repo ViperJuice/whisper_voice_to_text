@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 # Initialise logging before anything else
 debug_mode = bool(os.environ.get("VTT_DEBUG", "0") == "1")
-logging_config.init_logging(debug=debug_mode, redirect_print=False)
+logging_config.init_logging(debug=debug_mode, redirect_print=True)
 
 def main():
     """Main function to run the voice-to-text application"""
