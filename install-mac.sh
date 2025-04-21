@@ -104,7 +104,8 @@ echo "Installing Whisper (this may take a moment)..."
 pip install --exists-action i git+https://github.com/openai/whisper.git
 
 echo "Checking for additional dependencies..."
-pip install --exists-action i openai anthropic google-generativeai ollama retry rich
+# Include PyAudio and pyperclip explicitly to avoid missing module errors.
+pip install --exists-action i openai anthropic google-generativeai ollama retry rich pyaudio pyperclip
 
 # Make run script executable
 chmod +x run-mac.sh

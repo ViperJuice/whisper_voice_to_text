@@ -28,7 +28,15 @@ check_package() {
     local package=$1
     if [ -d ".venv" ]; then
         source .venv/bin/activate 2>/dev/null
-        python3 -c "import ${package}" 2>/dev/null
+        # Use importlib to support dotted module paths (e.g. google.generativeai)
+        python3 - <<PY 2>/dev/null
+import importlib, sys
+try:
+    importlib.import_module("${package}")
+    sys.exit(0)
+except Exception:
+    sys.exit(1)
+PY
         return $?
     fi
     return 1
@@ -67,9 +75,29 @@ if [ ! -d ".venv" ]; then
     NEED_INSTALL=1
 else
     # Check for required Python packages
-    REQUIRED_PACKAGES=("pyaudio" "rich" "openai" "whisper" "pyperclip")
+    # Important runtime‑level imports required by the application. If any of these fail we
+    # trigger a full installation/update cycle via install‑linux.sh.
+    #
+    # Notes:
+    #   • Use the *import* module names here, not the PyPI package names. For example
+    #     the PyPI package "openai‑whisper" installs the module "whisper".
+    #   • Hyphens in package names are therefore NOT replaced – the full dotted import
+    #     path is supplied so that `python -c "import <name>"` works correctly.
+    #   • Keep this list in sync with requirements.txt and with any new integrations
+    #     added to the codebase.
+    REQUIRED_PACKAGES=(
+        "pyaudio"              # microphone access
+        "whisper"              # transcription (local + OpenAI Whisper API)
+        "openai"               # OpenAI LLM / Whisper API client
+        "anthropic"            # Claude (Anthropic) client
+        "google.generativeai" # Gemini client
+        "ollama"               # Local LLM client shim (optional but cheap to check)
+        "requests"             # HTTP for several LLM helpers
+        "rich"                 # colourful terminal output (used in helpers)
+        "pyperclip"            # clipboard support
+    )
     for package in "${REQUIRED_PACKAGES[@]}"; do
-        if ! check_package "${package//-/_}"; then
+        if ! check_package "$package"; then
             echo "Python package '${package}' not found."
             NEED_INSTALL=1
             break

@@ -90,6 +90,50 @@ if [ ! -d ".venv" ]; then
         echo "Installation failed. Please run ./install-mac.sh manually."
         exit 1
     fi
+else
+    # Verify that critical runtime Python modules are available; if not, re‑run the installer.
+    check_py_module() {
+        local mod=$1
+        source .venv/bin/activate 2>/dev/null
+        python3 - <<PY 2>/dev/null
+import importlib, sys
+try:
+    importlib.import_module("${mod}")
+    sys.exit(0)
+except Exception:
+    sys.exit(1)
+PY
+        return $?
+    }
+
+    RUNTIME_MODULES=(
+        "pyaudio"              # microphone access
+        "whisper"              # transcription engine
+        "openai"               # OpenAI client
+        "anthropic"            # Claude client
+        "google.generativeai"  # Gemini client
+        "ollama"               # local LLM client shim
+        "rich"                 # coloured output
+        "pyperclip"            # clipboard helper
+    )
+
+    MISSING=0
+    for mod in "${RUNTIME_MODULES[@]}"; do
+        if ! check_py_module "$mod"; then
+            echo "Python module '$mod' missing in virtualenv."
+            MISSING=1
+            break
+        fi
+    done
+
+    if [ $MISSING -eq 1 ]; then
+        echo "Some Python dependencies are missing – running install‑mac.sh ..."
+        ./install-mac.sh
+        if [ $? -ne 0 ]; then
+            echo "Installation failed. Please run ./install-mac.sh manually."
+            exit 1
+        fi
+    fi
 fi
 
 # Activate virtual environment

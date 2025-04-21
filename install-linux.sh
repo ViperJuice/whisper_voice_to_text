@@ -20,7 +20,10 @@ fi
 # Function to check if a Python package is installed in the virtual environment
 check_package() {
     local package=$1
-    sudo -u $ORIG_USER bash -c "source .venv/bin/activate && python3 -c 'import $package' 2>/dev/null"
+    # We need to support dotted module paths (e.g. google.generativeai). Using importlib ensures
+    # that nested imports resolve correctly. We embed the package name via Bash variable
+    # expansion inside the Python one‑liner.
+    sudo -u $ORIG_USER bash -c "source .venv/bin/activate && python3 -c \"import importlib, sys; importlib.import_module('${package}');\" 2>/dev/null"
     return $?
 }
 
@@ -228,11 +231,26 @@ echo "Checking Python dependencies..."
 run_pip_as_user "install --upgrade pip"
 
 # Check and install required packages
-REQUIRED_PACKAGES=("pyaudio" "rich" "openai-whisper" "pyperclip")
+# Important runtime‑level *import module* names required for the application to start. Keep this
+# list in sync with requirements.txt and run-linux.sh.
+REQUIRED_PACKAGES=(
+    "pyaudio"               # audio input
+    "whisper"               # transcription engine
+    "rich"                  # colourful CLI output
+    "pyperclip"             # clipboard integration
+    "openai"                # OpenAI client
+    "anthropic"             # Claude client
+    "google.generativeai"   # Gemini client
+    "ollama"                # local LLM client
+    "requests"              # HTTP helper
+)
+
+# Track missing packages for selective installs later
 MISSING_PY_PACKAGES=()
 
+# Detect which import modules are missing in the virtual environment
 for package in "${REQUIRED_PACKAGES[@]}"; do
-    if ! check_package "${package//-/_}"; then
+    if ! check_package "$package"; then
         MISSING_PY_PACKAGES+=("$package")
     fi
 done
@@ -241,19 +259,39 @@ if [ ${#MISSING_PY_PACKAGES[@]} -ne 0 ] || [ "$VENV_NEEDS_SETUP" = true ]; then
     echo "Installing/upgrading Python packages..."
     run_pip_as_user "install -r requirements.txt"
     
-    # Install specific packages that might need special handling
-    if [[ " ${MISSING_PY_PACKAGES[@]} " =~ " pyaudio " ]]; then
-        run_pip_as_user "install pyaudio"
-    fi
-    if [[ " ${MISSING_PY_PACKAGES[@]} " =~ " openai-whisper " ]]; then
-        run_pip_as_user "install git+https://github.com/openai/whisper.git"
-    fi
-    if [[ " ${MISSING_PY_PACKAGES[@]} " =~ " rich " ]]; then
-        run_pip_as_user "install rich"
-    fi
-    if [[ " ${MISSING_PY_PACKAGES[@]} " =~ " pyperclip " ]]; then
-        run_pip_as_user "install pyperclip"
-    fi
+    # Install/upgrade specific packages that may require special handling or differ in PyPI name
+    for missing in "${MISSING_PY_PACKAGES[@]}"; do
+        case "$missing" in
+            "pyaudio")
+                run_pip_as_user "install pyaudio"
+                ;;
+            "whisper")
+                # whisper import comes from the openai‑whisper package
+                run_pip_as_user "install git+https://github.com/openai/whisper.git"
+                ;;
+            "rich")
+                run_pip_as_user "install rich"
+                ;;
+            "pyperclip")
+                run_pip_as_user "install pyperclip"
+                ;;
+            "openai")
+                run_pip_as_user "install openai"
+                ;;
+            "anthropic")
+                run_pip_as_user "install anthropic"
+                ;;
+            "google.generativeai")
+                run_pip_as_user "install google-generativeai"
+                ;;
+            "ollama")
+                run_pip_as_user "install ollama"
+                ;;
+            "requests")
+                run_pip_as_user "install requests"
+                ;;
+        esac
+    done
 else
     echo "All Python packages are already installed."
 fi
