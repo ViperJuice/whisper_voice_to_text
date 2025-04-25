@@ -173,7 +173,8 @@ if ($ollamaProcess) {
             $version = ($response.Content | ConvertFrom-Json).version
             Write-Host "✓ Ollama server running: version $version" -ForegroundColor Green
         }
-    } catch {
+    }
+    catch {
         Write-Host "Ollama process exists but API is not responding" -ForegroundColor Yellow
     }
 }
