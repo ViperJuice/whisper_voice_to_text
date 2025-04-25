@@ -1,5 +1,8 @@
 # Voice to Text with LLM Enhancement - Launcher
 Write-Host "Voice to Text with LLM Enhancement - Launcher" -ForegroundColor Green
+# Ensure console uses UTF-8 to avoid UnicodeEncodeError for emoji output
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+chcp 65001 | Out-Null
 Write-Host "=============================================" -ForegroundColor Green
 Write-Host "(Set environment variable VTT_DEBUG=1 for verbose logging)" -ForegroundColor Yellow
 
