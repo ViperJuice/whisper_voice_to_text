@@ -28,6 +28,10 @@ A powerful voice transcription tool that uses OpenAI's Whisper model for high-qu
 
 ## Installation
 
+For a quick setup on any operating system, run `./setup.sh` from the project
+root. This helper script detects your platform and launches the correct
+installer.
+
 ### Windows
 
 1. Download or clone this repository
